@@ -11,6 +11,10 @@ import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,60 +89,56 @@ public class Main {
         }
     }
 
-    static void sendEmail(
-            String employee,
-            String action,
-            LocalDateTime time
-    ) throws Exception {
+    static void sendEmail(String employee, String action, LocalDateTime time) {
 
-        final String fromEmail = "esquilinho99@gmail.com";
-        final String password = "jrea zluo delo pclf";//admin@kika_qr@2026
+        try {
+            String apiKey = System.getenv("BREVO_API_KEY");
 
-        final String toEmail = "diogo.msf.99@gmail.com";//franciscanp.gil
+            final String fromEmail = "esquilinho99@gmail.com";
+            //final String password = "jrea zluo delo pclf";//admin@kika_qr@2026
+            final String toEmail = "diogo.msf.99@gmail.com";//franciscanp.gil
 
-        Properties props = new Properties();
+            String jsonBody = """
+        {
+          "sender": {
+            "name": "QR System",
+            "email": "%s"
+          },
+          "to": [
+            {
+              "email": "%s"
+            }
+          ],
+          "subject": "%s - %s",
+          "htmlContent": "<h2>Employee: %s</h2><p>Action: %s</p><p>Time: %s</p>"
+        }
+        """.formatted(
+                    fromEmail,
+                    toEmail,
+                    employee,
+                    action,
+                    employee,
+                    action,
+                    time
+            );
 
-        props.put("mail.smtp.auth", "true");
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                    .header("accept", "application/json")
+                    .header("api-key", apiKey)
+                    .header("content-type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
 
-        props.put("mail.smtp.starttls.enable", "true");
+            HttpClient client = HttpClient.newHttpClient();
 
-        props.put("mail.smtp.host", "smtp.gmail.com");
+            HttpResponse<String> response =
+                    client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        props.put("mail.smtp.port", "587");
+            System.out.println("Email sent. Response: " + response.body());
 
-        Session session = Session.getInstance(
-                props,
-                new Authenticator() {
-                    protected PasswordAuthentication
-                    getPasswordAuthentication() {
-
-                        return new PasswordAuthentication(
-                                fromEmail,
-                                password
-                        );
-                    }
-                }
-        );
-
-        Message message = new MimeMessage(session);
-
-        message.setFrom(new InternetAddress(fromEmail));
-
-        message.setRecipients(
-                Message.RecipientType.TO,
-                InternetAddress.parse(toEmail)
-        );
-
-        message.setSubject(employee + " - " + action);
-
-        message.setText(
-                "Employee: " + employee + "\n"
-                        + "Action: " + action + "\n"
-                        + "Time: " + time
-        );
-
-        Transport.send(message);
-
-        System.out.println("Email sent.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
