@@ -25,7 +25,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));
+        int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8081"));
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
@@ -94,7 +94,7 @@ public class Main {
         final String fromEmail = "esquilinho99@gmail.com";
         final String password = "jrea zluo delo pclf";//admin@kika_qr@2026
 
-        final String toEmail = "franciscanp.gil@gmail.com";
+        final String toEmail = "diogo.msf.99@gmail.com";//franciscanp.gil
 
         Properties props = new Properties();
 
